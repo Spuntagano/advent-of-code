@@ -1,0 +1,22 @@
+{
+  "name": "24",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "devDependencies": {
+    "@types/jest": "^27.0.3",
+    "@types/node": "^17.0.4",
+    "jest": "^27.4.5",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "scripts": {
+    "start": "ts-node main.ts",
+    "start-min": "ts-node main-min.ts",
+    "start-brute": "ts-node main-brute.ts",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC"
+}
