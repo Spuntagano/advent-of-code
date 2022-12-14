@@ -38,37 +38,56 @@ fn read_file() -> std::io::Result<String> {
     return Ok(contents)
 }
 
+#[derive(Debug)]
 struct TreeNode {
     pub value: String,
     pub children: HashMap<String, Rc<RefCell<TreeNode>>>,
     pub parent: Option<Rc<RefCell<TreeNode>>>,
 }
 
-impl TreeNode {
-    pub fn new(value: String) -> TreeNode {
-        return TreeNode {
-            value,
-            children: HashMap::new(),
-            parent: None,
-        };
-    }
-
-    pub fn add_child(&mut self, value: String) {
-        let node = TreeNode::new(value);
-        node.parent = Some(Rc::new(RefCell::new(self)));
-        self.children.insert(value, Rc::new(RefCell::new(node)));
-    }
-}
+// impl TreeNode {
+//     pub fn new(value: String) -> TreeNode {
+//         return TreeNode {
+//             value,
+//             children: HashMap::new(),
+//             parent: None,
+//         };
+//     }
+//
+//     pub fn add_child(&mut self, value: String) {
+//         let node = TreeNode::new(value);
+//         node.parent = Some(Rc::new(RefCell::new(self)));
+//         self.children.insert(value, Rc::new(RefCell::new(node)));
+//     }
+// }
 
 fn parse_file(contents: String) -> Result<i32, ParsingError> {
-    let mut most_calories_carried = 0;
-    let mut root = Rc::new(RefCell::new(TreeNode::new(String::from("/"))));
+    // let mut root = Rc::new(RefCell::new(TreeNode::new(String::from("/"))));
+
+    let mut root = Rc::new(RefCell::new(TreeNode {
+        value: String::from("/"),
+        children: HashMap::new(),
+        parent: None
+    }));
+
+    let mut current = root;
+    let mut current_mut = root.borrow_mut();
 
     for line in contents.lines() {
         let split_line = line.split(" ").collect::<Vec<&str>>();
         if split_line.get(0).ok_or(ParsingError)?.to_owned() == "$" {
             match split_line.get(1).ok_or(ParsingError)?.to_owned() {
                 "cd" => {
+                    let value = split_line.get(2).ok_or(ParsingError)?.to_string();
+                    if !current_mut.children.contains_key(&value) {
+                        current_mut.children.insert(value.to_owned(), Rc::new(RefCell::new(TreeNode {
+                            value: value.to_owned(),
+                            children: HashMap::new(),
+                            parent: Some(current),
+                        })));
+                    }
+
+                    current = Rc::clone(current_mut.children.get(&value).unwrap());
                 },
                 "ls" => {},
                 _ => {}
@@ -80,5 +99,5 @@ fn parse_file(contents: String) -> Result<i32, ParsingError> {
         }
     }
 
-    return Ok(most_calories_carried);
+    return Ok(0);
 }
