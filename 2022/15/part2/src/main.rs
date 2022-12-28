@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::io::BufReader;
@@ -36,50 +35,53 @@ fn read_file() -> std::io::Result<String> {
     return Ok(contents)
 }
 
-fn parse_file(contents: String) -> Result<i32, ParsingError> {
-    let target_row = 2000000;
-    let mut highest_value = 0;
-    let mut lowest_value = 0;
-    let mut row = vec![];
-    let mut ranges = vec![];
+fn parse_file(contents: String) -> Result<i64, ParsingError> {
+    let mut coords = vec![];
+    let bound = 4000000;
     for line in contents.lines() {
         let space_split = line.split_whitespace().collect::<Vec<&str>>();
         let sensor_x = space_split[2].get(2..space_split[2].len()-1).ok_or(ParsingError)?.parse::<i32>().map_err(|_| ParsingError)?;
         let sensor_y = space_split[3].get(2..space_split[3].len()-1).ok_or(ParsingError)?.parse::<i32>().map_err(|_| ParsingError)?;
         let beacon_x = space_split[8].get(2..space_split[8].len()-1).ok_or(ParsingError)?.parse::<i32>().map_err(|_| ParsingError)?;
         let beacon_y = space_split[9].get(2..space_split[9].len()).ok_or(ParsingError)?.parse::<i32>().map_err(|_| ParsingError)?;
+        coords.push((sensor_x, sensor_y, beacon_x, beacon_y));
+    }
 
+    for y in 0..=bound {
+        let mut ranges = vec![];
+        for coord in &coords {
+            let (sensor_x, sensor_y, beacon_x, beacon_y) = coord;
+            let manhattan_distance = calculate_manhattan_distance(sensor_x, sensor_y, beacon_x, beacon_y);
+            let bottom = sensor_y + manhattan_distance;
+            let top = sensor_y - manhattan_distance;
 
-        let manhattan_distance = calculate_manhattan_distance(sensor_x, sensor_y, beacon_x, beacon_y);
-        let bottom = sensor_y + manhattan_distance;
-        let top = sensor_y - manhattan_distance;
-
-        if bottom >= target_row && top <= target_row {
-            let distance = ((sensor_y - target_row).abs() - manhattan_distance).abs();
-            ranges.push(sensor_x-distance..sensor_x+distance);
-            if sensor_x + distance > highest_value {
-                highest_value = sensor_x + distance
-            }
-
-            if sensor_x - distance > lowest_value {
-                lowest_value = sensor_x - distance
+            if bottom >= y && top <= y {
+                let distance = ((sensor_y - y).abs() - manhattan_distance).abs();
+                ranges.push(sensor_x-distance..=sensor_x+distance);
+                ranges.sort_by(|a, b| a.start().cmp(&b.start()));
             }
         }
-    }
 
-    for _ in 0..highest_value + lowest_value.abs() {
-        row.push(false);
-    }
+        let mut x = 0;
+        while x <= bound {
+            for range in &ranges {
+                if range.contains(&x) {
+                    x = range.end() + 1;
+                }
+            }
 
-    for range in ranges {
-        for x in range {
-            row[(x + lowest_value) as usize] = true;
+            if x <= bound {
+                return Ok((x as i64 * 4000000 as i64) + y as i64);
+            }
+
+            x += 1;
         }
+
     }
 
-    return Ok(0);
+    return Ok(-1);
 }
 
-fn calculate_manhattan_distance(x1: i32, y1: i32, x2: i32, y2: i32) -> i32 {
+fn calculate_manhattan_distance(x1: &i32, y1: &i32, x2: &i32, y2: &i32) -> i32 {
     return (x1 - x2).abs() + (y1 - y2).abs();
 }
