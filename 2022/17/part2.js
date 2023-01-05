@@ -30,24 +30,6 @@ const isShapeOverlap = (grid, shape, x, y) => {
     return false;
 }
 
-const getTopology = (grid, currentHeight) => {
-    const topology = [];
-    for (let y = 0; y < 50; y++) {
-        topology.push([]);
-        for (x = 0; x < grid[0].length; x++) {
-            topology[y].push(false);
-        }
-    }
-
-    for (let x = 0; x < grid[0].length; x++) {
-        for (let y = currentHeight; y < currentHeight + topology.length; y++) {
-            topology[50 - (y - currentHeight) - 1][x] = grid[y][x];
-        }
-    }
-
-    return topology;
-}
-
 const printGrid = (grid, currentHeight, length) => {
     let str = '';
     for (let y = 0; y < grid.length; y++) {
@@ -63,19 +45,15 @@ const printGrid = (grid, currentHeight, length) => {
                 str += '.';
             }
         }
+        str += (MAX_HEIGHT - y);
         str += '\n'
     }
 
     console.log(str);
 }
 
-const SHAPES_COUNT = 5;
-const WIND_COUNT = 10091;
-
 const MAX_HEIGHT = 1000000;
 const BLOCK_NUMBER = 1000000000000;
-
-const BLOCK_STEP_COUNT = SHAPES_COUNT * WIND_COUNT;
 
 const winds = input.trimEnd().split('');
 const shapes = [
@@ -86,10 +64,12 @@ const shapes = [
     [{y: 0, x: 0}, {y: 0, x: 1}, {y: 1, x: 0}, {y: 1, x: 1}],
 ];
 
-const run = (grid, startHeight, blockStepCount, target) => {
+const BLOCK_STEP_COUNT = shapes.length;
+
+const run = (grid, startHeight, blockStepCount, target, initWindIndex) => {
     let currentHeight = startHeight;
     let currentShapeIndex = 0;
-    let currentWindIndex = 0;
+    let currentWindIndex = initWindIndex || 0;
     for (let i = 0; i < blockStepCount; i++) {
         let x = 2;
         let y = currentHeight - 3;
@@ -138,44 +118,74 @@ const run = (grid, startHeight, blockStepCount, target) => {
     return currentHeight;
 }
 
-const resetGrid = (grid, topology, currentHeight) => {
-    for (let y = currentHeight; y < grid.length; y++) {
-        for (let x = 0; x < grid[y].length; x++) {
-            grid[y][x] = false;
-        }
-    }
-
-    for (let y = 0; y < topology.length; y++) {
-        for (let x = 0; x < topology[y].length; x++) {
-            grid[MAX_HEIGHT - y][x] = topology[y][x];
-        }
-    }
-
-    return MAX_HEIGHT - topology.length;
-}
-
-const cache = {};
 const grid = [];
 for (let i = 0; i <= MAX_HEIGHT; i++) {
     let row = [false, false, false, false, false, false, false];
     grid.push(row);
 }
 
-let topology = null;
-let currentHeight = MAX_HEIGHT;
-for (let i = 0; i < 10; i++) {
-    currentHeight = run(grid, currentHeight, BLOCK_STEP_COUNT);
-    topology = getTopology(grid, currentHeight);
-    currentHeight = resetGrid(grid, topology, currentHeight);
+// 1233
+// 544
+// 491
+// 438
+// 385
+// 332
+// 279
+// 226
+// 173
+// 120
+// 67
+
+// 53
+
+// 5 * 22 = 172
+// 5 * 15 = 119
+// 5 * 8 = 66
+
+// 5 * 8 66
+
+// 5 * 7 53
+if (FILE_NAME === 'test.txt') {
+    let currentHeight = MAX_HEIGHT;
+    currentHeight = run(grid, currentHeight, BLOCK_STEP_COUNT * 8 );
+
+    let initHeight = 66;
+    let initBlock = 40;
+    let step = 53;
+    let blockStep = 35
+
+    let blockCount = (Math.floor((BLOCK_NUMBER- initBlock) / blockStep) * blockStep);
+    let height = (blockCount / blockStep * step) + initHeight;
+    blockCount += initBlock;
+
+    let initialHeight = currentHeight;
+    currentHeight = run(grid, currentHeight, 100000, BLOCK_NUMBER - blockCount, 21);
+    console.log(height + initialHeight - currentHeight - 1);
+} else {
+
+    // 5962 - 760
+    // 3260 - 415
+    // 558 - 70
+
+    // 2702
+    // 345
+
+    let currentHeight = MAX_HEIGHT;
+    currentHeight = run(grid, currentHeight, BLOCK_STEP_COUNT * 70 );
+
+    let initHeight = 558;
+    let initBlock = 350;
+    let step = 2702;
+    let blockStep = 1725;
+
+    let blockCount = (Math.floor((BLOCK_NUMBER- initBlock) / blockStep) * blockStep);
+    let height = (blockCount / blockStep * step) + initHeight;
+    blockCount += initBlock;
+
+    let initialHeight = currentHeight;
+    currentHeight = run(grid, currentHeight, 100000, BLOCK_NUMBER - blockCount, 2035);
+    console.log(height + initialHeight - currentHeight - 1);
 }
-
-const target = Math.floor(1000000000000 / BLOCK_STEP_COUNT) * BLOCK_STEP_COUNT;
-console.log(target);
-const height = Math.floor(1000000000000 / BLOCK_STEP_COUNT) * 70637;
-console.log(height);
-
-const a = height + run(grid, currentHeight, BLOCK_STEP_COUNT, 1000000000000 - target);
-console.log(a);
 
 // let initialHeight = MAX_HEIGHT;
 // let currentHeight = MAX_HEIGHT;
@@ -197,20 +207,3 @@ console.log(a);
 //     initialHeight = resetGrid(grid, cacheKey.split('-').map((value) => parseInt(value)), currentHeight);
 //     printGrid(grid, initialHeight, 20);
 // }
-
-// const init = 152812;
-// const a  = 70636;
-// const b = 76403;
-// const ab = a + b;
-//
-// const target = 1000000000000;
-//
-// const blockCount = Math.floor(target / (BLOCK_STEP_COUNT * 2)) * BLOCK_STEP_COUNT * 2;
-// const blockHeight = init + ((blockCount / (BLOCK_STEP_COUNT * 2)) - (BLOCK_STEP_COUNT * 2)) * ab;
-// console.log(blockCount);
-// console.log(blockHeight);
-
-// 1514285714288
-// 1442292470302
-
-
